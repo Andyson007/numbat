@@ -1,30 +1,54 @@
+mod math;
 use std::fmt::Display;
 
 use compact_str::{format_compact, CompactString, ToCompactString};
-use num_traits::{Pow, ToPrimitive};
+use num_traits::{ToPrimitive, Zero};
 use pretty_dtoa::FmtFloatConfig;
 
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)] // TODO: we probably want to remove 'Copy' once we move to a more sophisticated numerical type
-pub struct Number(pub f64);
+#[cfg(feature = "plotting")]
+#[derive(serde::Serialize)]
+pub struct Number(f64);
 
 impl Eq for Number {}
 
 impl Number {
+    pub const ONE: Number = Number(1.0);
+    pub const NAN: Number = Number(f64::NAN);
+
+    pub fn is_nan(&self) -> bool {
+        self.0.is_nan()
+    }
+
+    pub fn is_infinite(&self) -> bool {
+        self.0.is_nan()
+    }
+
+    pub fn is_negative(&self) -> bool {
+        self.0.is_sign_negative()
+    }
+
+    pub fn is_zero(&self) -> bool {
+        self.0.is_zero()
+    }
+    pub fn is_positive(&self) -> bool {
+        self.0.is_sign_positive()
+    }
+
     pub fn from_f64(n: f64) -> Self {
         Number(n)
     }
 
-    pub fn to_f64(self) -> f64 {
-        let Number(n) = self;
-        n
+    pub fn to_i64(&self) -> Option<i64> {
+        self.0.to_i64()
     }
 
-    pub fn pow(self, other: &Number) -> Self {
-        Number::from_f64(self.to_f64().pow(other.to_f64()))
+    pub fn to_f64(&self) -> Option<f64> {
+        Some(self.0)
     }
 
-    pub fn abs(self) -> Self {
-        Number::from_f64(self.to_f64().abs())
+    pub fn is_integral(&self) -> bool {
+        self.0.fract().is_zero()
     }
 
     fn is_integer(self) -> bool {
@@ -106,9 +130,21 @@ impl Number {
     }
 }
 
+impl strfmt::DisplayStr for Number {
+    fn display_str(&self, f: &mut strfmt::Formatter) -> strfmt::Result<()> {
+        self.0.display_str(f)
+    }
+}
+
+impl strfmt::DisplayStr for &Number {
+    fn display_str(&self, f: &mut strfmt::Formatter) -> strfmt::Result<()> {
+        self.0.display_str(f)
+    }
+}
+
 impl Display for Number {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.to_f64().fmt(f)
+        self.0.to_f64().unwrap().fmt(f)
     }
 }
 
@@ -157,6 +193,34 @@ impl std::iter::Product for Number {
         iter.fold(Number::from_f64(1.0), |acc, n| acc * n)
     }
 }
+
+macro_rules! number_impl_from_primitive {
+    ($t:ty) => {
+        impl From<$t> for Number {
+            fn from(value: $t) -> Self {
+                Self(value as f64)
+            }
+        }
+    };
+}
+
+number_impl_from_primitive!(i8);
+number_impl_from_primitive!(i16);
+number_impl_from_primitive!(i32);
+number_impl_from_primitive!(i64);
+number_impl_from_primitive!(i128);
+
+number_impl_from_primitive!(u8);
+number_impl_from_primitive!(u16);
+number_impl_from_primitive!(u32);
+number_impl_from_primitive!(u64);
+number_impl_from_primitive!(u128);
+
+number_impl_from_primitive!(f32);
+number_impl_from_primitive!(f64);
+
+number_impl_from_primitive!(usize);
+number_impl_from_primitive!(isize);
 
 #[test]
 fn test_pretty_print() {

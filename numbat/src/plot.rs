@@ -1,4 +1,5 @@
 use compact_str::CompactString;
+use crate::number::Number;
 
 #[cfg(feature = "plotting")]
 use plotly::{
@@ -35,7 +36,7 @@ pub fn line_plot(xs: Vec<f64>, ys: Vec<f64>, x_label: &str, y_label: &str) -> Pl
 }
 
 #[cfg(feature = "plotting")]
-pub fn bar_chart(values: Vec<f64>, x_labels: Vec<CompactString>, value_label: &str) -> Plot {
+pub fn bar_chart(values: Vec<Number>, x_labels: Vec<CompactString>, value_label: &str) -> Plot {
     let mut plot = Plot::new();
 
     let trace = Bar::new(x_labels, values);

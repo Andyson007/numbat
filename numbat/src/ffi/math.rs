@@ -2,6 +2,7 @@ use super::macros::*;
 use super::Args;
 use super::Result;
 
+use crate::number::Number;
 use crate::quantity::Quantity;
 use crate::value::Value;
 
@@ -9,8 +10,9 @@ pub fn mod_(mut args: Args) -> Result<Value> {
     let x = quantity_arg!(args);
     let y = quantity_arg!(args);
 
-    let x_value = x.unsafe_value().to_f64();
-    let y_value = y.convert_to(x.unit()).unwrap().unsafe_value().to_f64();
+    let x_value = x.unsafe_value();
+    let binding = y.convert_to(x.unit()).unwrap();
+    let y_value = binding.unsafe_value();
 
     return_quantity!(x_value.rem_euclid(y_value), x.unit().clone())
 }
@@ -19,7 +21,7 @@ pub fn mod_(mut args: Args) -> Result<Value> {
 macro_rules! simple_scalar_math_function {
     ($name:ident, $op:ident) => {
         pub fn $name(mut args: Args) -> Result<Value> {
-            let value = scalar_arg!(args).to_f64();
+            let value = scalar_arg!(args);
             return_scalar!(value.$op())
         }
     };
@@ -27,7 +29,7 @@ macro_rules! simple_scalar_math_function {
 
 pub fn abs(mut args: Args) -> Result<Value> {
     let arg = quantity_arg!(args);
-    return_quantity!(arg.unsafe_value().to_f64().abs(), arg.unit().clone())
+    return_quantity!(arg.unsafe_value().abs(), arg.unit().clone())
 }
 
 simple_scalar_math_function!(round, round);
@@ -47,10 +49,11 @@ pub fn atan2(mut args: Args) -> Result<Value> {
     let y = quantity_arg!(args);
     let x = quantity_arg!(args);
 
-    let y_value = y.unsafe_value().to_f64();
-    let x_value = x.convert_to(y.unit()).unwrap().unsafe_value().to_f64();
+    let y_value = y.unsafe_value();
+    let binding = x.convert_to(y.unit()).unwrap();
+    let x_value = binding.unsafe_value();
 
-    return_scalar!(y_value.atan2(x_value))
+    return_scalar!(y_value.atan2(&x_value))
 }
 
 simple_scalar_math_function!(sinh, sinh);
@@ -63,25 +66,20 @@ simple_scalar_math_function!(exp, exp);
 simple_scalar_math_function!(ln, ln);
 simple_scalar_math_function!(log10, log10);
 simple_scalar_math_function!(log2, log2);
-
-pub fn gamma(mut args: Args) -> Result<Value> {
-    let input = scalar_arg!(args).to_f64();
-
-    return_scalar!(crate::gamma::gamma(input))
-}
+simple_scalar_math_function!(gamma, gamma);
 
 pub fn is_nan(mut args: Args) -> Result<Value> {
     let arg = quantity_arg!(args);
 
-    return_boolean!(arg.unsafe_value().to_f64().is_nan())
+    return_boolean!(arg.unsafe_value().is_nan())
 }
 
 pub fn is_infinite(mut args: Args) -> Result<Value> {
     let arg = quantity_arg!(args);
 
-    return_boolean!(arg.unsafe_value().to_f64().is_infinite())
+    return_boolean!(arg.unsafe_value().is_infinite())
 }
 
 pub fn random(_args: Args) -> Result<Value> {
-    return_scalar!(rand::random::<f64>())
+    return_scalar!(Number::random())
 }

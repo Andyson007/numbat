@@ -4,7 +4,6 @@ use jiff::fmt::StdFmtWrite;
 use jiff::Span;
 use jiff::Timestamp;
 use jiff::Zoned;
-use num_traits::ToPrimitive;
 
 use super::macros::*;
 use super::Args;
@@ -63,11 +62,11 @@ pub fn unixtime(mut args: Args) -> Result<Value> {
 
     let output = input.timestamp().as_second();
 
-    return_scalar!(output as f64)
+    return_scalar!(output.into())
 }
 
 pub fn from_unixtime(mut args: Args) -> Result<Value> {
-    let timestamp = quantity_arg!(args).unsafe_value().to_f64() as i64;
+    let timestamp = quantity_arg!(args).unsafe_value().to_i64().unwrap();
 
     let dt = Timestamp::from_second(timestamp)
         .map_err(|_| RuntimeError::DateTimeOutOfRange)?
@@ -82,9 +81,10 @@ fn calendar_add(
     to_span: fn(i64) -> std::result::Result<Span, jiff::Error>,
 ) -> Result<Value> {
     let dt = datetime_arg!(args);
-    let n = quantity_arg!(args).unsafe_value().to_f64();
+    let binding = quantity_arg!(args);
+    let n = binding.unsafe_value();
 
-    if n.fract() != 0.0 {
+    if !n.is_integral() {
         return Err(Box::new(RuntimeError::UserError(format!(
             "calendar_add: requires an integer number of {unit_name}s"
         ))));

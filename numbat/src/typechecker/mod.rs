@@ -36,7 +36,6 @@ use constraints::{Constraint, ConstraintSet, ConstraintSolverError, TrivialResol
 use environment::{Environment, FunctionMetadata, FunctionSignature};
 use itertools::Itertools;
 use name_generator::NameGenerator;
-use num_traits::Zero;
 
 pub use error::{Result, TypeCheckError};
 pub use incompatible_dimensions::IncompatibleDimensionsError;
@@ -305,7 +304,7 @@ impl TypeChecker {
     ) -> Result<typed_ast::Expression<'a>> {
         Ok(match ast {
             ast::Expression::Scalar(span, n)
-                if n.to_f64().is_zero() || n.to_f64().is_infinite() || n.to_f64().is_nan() =>
+                if n.is_zero() || n.is_infinite() || n.is_nan() =>
             {
                 let polymorphic_zero_type = self.fresh_type_variable();
                 self.add_dtype_constraint(&polymorphic_zero_type).ok();

@@ -2,6 +2,7 @@ use super::macros::*;
 use super::Args;
 use super::Result;
 use crate::currency::ExchangeRatesCache;
+use crate::number::Number;
 use crate::quantity::Quantity;
 use crate::value::Value;
 
@@ -10,5 +11,7 @@ pub fn exchange_rate(mut args: Args) -> Result<Value> {
 
     let exchange_rates = ExchangeRatesCache::new();
 
-    return_scalar!(exchange_rates.get_rate(&rate).unwrap_or(f64::NAN))
+    return_scalar!(Number::from_f64(
+        exchange_rates.get_rate(&rate).unwrap_or(f64::NAN)
+    ))
 }

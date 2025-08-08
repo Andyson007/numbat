@@ -4,7 +4,6 @@ use std::sync::Arc;
 
 use compact_str::{CompactString, ToCompactString};
 use indexmap::IndexMap;
-use num_traits::ToPrimitive;
 
 use crate::list::NumbatList;
 use crate::span::Span;
@@ -13,7 +12,6 @@ use crate::{
     ffi::{self, ArityRange, Callable, ForeignFunction},
     interpreter::{InterpreterResult, PrintFunction, Result, RuntimeError},
     markup::Markup,
-    math,
     number::Number,
     prefix::Prefix,
     quantity::{Quantity, QuantityError},
@@ -208,7 +206,7 @@ impl Op {
 
 #[derive(Clone, Debug)]
 pub enum Constant {
-    Scalar(f64),
+    Scalar(Number),
     Unit(Unit),
     Boolean(bool),
     String(CompactString),
@@ -707,7 +705,7 @@ impl Vm {
 
                     // for time, the base unit is in seconds
                     let base = rhs.to_base_unit_representation();
-                    let seconds_f64 = base.unsafe_value().to_f64();
+                    let seconds_f64 = base.unsafe_value();
 
                     let seconds_i64 = seconds_f64
                         .to_i64()
@@ -716,7 +714,12 @@ impl Vm {
                     let span = jiff::Span::new()
                         .try_seconds(seconds_i64)
                         .map_err(|_| RuntimeError::DurationOutOfRange)?
-                        .nanoseconds((seconds_f64.fract() * 1_000_000_000f64).round() as i64);
+                        .nanoseconds(
+                            (seconds_f64.fract() * 1_000_000_000.into())
+                                .round()
+                                .to_i64()
+                                .unwrap(),
+                        );
 
                     self.push(Value::DateTime(match op {
                         Op::AddToDateTime => lhs
@@ -811,18 +814,16 @@ impl Vm {
                     let lhs = self
                         .pop_quantity()
                         .as_scalar()
-                        .expect("Expected factorial operand to be scalar")
-                        .to_f64();
+                        .expect("Expected factorial operand to be scalar");
 
                     let order = self.read_u16();
 
-                    if lhs < 0. {
+                    if lhs.is_negative() {
                         return Err(Box::new(RuntimeError::FactorialOfNegativeNumber));
-                    } else if lhs.fract() != 0. {
+                    } else if lhs.fract().is_zero() {
                         return Err(Box::new(RuntimeError::FactorialOfNonInteger));
                     }
-
-                    self.push_quantity(Quantity::from_scalar(math::factorial(lhs, order)));
+                    self.push_quantity(Quantity::from_scalar(lhs.factorial(order)));
                 }
                 Op::JumpIfFalse => {
                     let offset = self.read_u16() as usize;
@@ -959,7 +960,7 @@ impl Vm {
                                     let mut vars = HashMap::new();
                                     vars.insert(
                                         CompactString::const_new("value"),
-                                        q.unsafe_value().to_f64(),
+                                        q.unsafe_value(),
                                     );
 
                                     let mut str =

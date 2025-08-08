@@ -1271,10 +1271,10 @@ fn pretty_print_binop(op: &BinaryOperator, lhs: &Expression, rhs: &Expression) -
 
             add_parens_if_needed(lhs) + op.pretty_print() + add_parens_if_needed(rhs)
         }
-        BinaryOperator::Power if matches!(rhs, Expression::Scalar(_, n, _type) if n.to_f64() == 2.0) => {
+        BinaryOperator::Power if matches!(rhs, Expression::Scalar(_, n, _type) if n.to_f64().unwrap() == 2.0) => {
             with_parens(lhs) + m::operator("²")
         }
-        BinaryOperator::Power if matches!(rhs, Expression::Scalar(_, n, _type) if n.to_f64() == 3.0) => {
+        BinaryOperator::Power if matches!(rhs, Expression::Scalar(_, n, _type) if n.to_f64().unwrap() == 3.0) => {
             with_parens(lhs) + m::operator("³")
         }
         _ => with_parens(lhs) + op.pretty_print() + with_parens(rhs),

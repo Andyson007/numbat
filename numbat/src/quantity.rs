@@ -37,25 +37,17 @@ impl Quantity {
         }
     }
 
-    pub fn new_f64(value: f64, unit: Unit) -> Self {
-        Quantity {
-            value: Number::from_f64(value),
-            unit,
-            can_simplify: true,
-        }
-    }
-
     pub fn no_simplify(mut self) -> Self {
         self.can_simplify = false;
         self
     }
 
-    pub fn from_scalar(value: f64) -> Quantity {
-        Quantity::new_f64(value, Unit::scalar())
+    pub fn from_scalar(value: Number) -> Quantity {
+        Quantity::new(value, Unit::scalar())
     }
 
     pub fn from_unit(unit: Unit) -> Quantity {
-        Quantity::new_f64(1.0, unit)
+        Quantity::new(Number::ONE, unit)
     }
 
     pub fn unit(&self) -> &Unit {
@@ -63,7 +55,7 @@ impl Quantity {
     }
 
     pub fn is_zero(&self) -> bool {
-        self.value.to_f64() == 0.0
+        self.value.is_zero()
     }
 
     pub fn abs(self) -> Self {
@@ -76,7 +68,7 @@ impl Quantity {
     }
 
     pub fn convert_to(&self, target_unit: &Unit) -> Result<Quantity> {
-        if &self.unit == target_unit || self.unsafe_value().to_f64().is_zero() {
+        if &self.unit == target_unit || self.unsafe_value().is_zero() {
             Ok(Quantity::new(self.value, target_unit.clone()))
         } else {
             // Remove common unit factors to reduce unnecessary conversion procedures
@@ -240,11 +232,16 @@ impl Quantity {
     }
 
     pub fn power(self, exp: Quantity) -> Result<Self> {
-        let exponent_as_scalar = exp.as_scalar()?.to_f64();
-        Ok(Quantity::new_f64(
-            self.value.to_f64().powf(exponent_as_scalar),
+        let exponent_as_scalar = exp.as_scalar()?;
+        Ok(Quantity::new(
+            self.value.pow(&exponent_as_scalar),
             self.unit.power(
-                Rational::from_f64(exponent_as_scalar).ok_or(QuantityError::NonRationalExponent)?,
+                Rational::from_f64(
+                    exponent_as_scalar
+                        .to_f64()
+                        .ok_or(QuantityError::NonRationalExponent)?,
+                )
+                .ok_or(QuantityError::NonRationalExponent)?,
             ),
         ))
     }
@@ -260,7 +257,7 @@ impl Quantity {
 
 impl From<&Number> for Quantity {
     fn from(n: &Number) -> Self {
-        Quantity::from_scalar(n.to_f64())
+        Quantity::from_scalar(*n)
     }
 }
 
@@ -355,7 +352,7 @@ impl Quantity {
     /// partial_cmp that encodes whether comparison fails because its arguments have
     /// incompatible units, or because one of them is NaN
     pub(crate) fn partial_cmp_preserve_nan(&self, other: &Self) -> QuantityOrdering {
-        if self.value.to_f64().is_nan() || other.value.to_f64().is_nan() {
+        if self.value.is_nan() || other.value.is_nan() {
             return QuantityOrdering::NanOperand;
         }
 
@@ -452,13 +449,13 @@ mod tests {
         let length = Quantity::new_f64(2.0, meter.clone());
 
         let length_in_foot = length.convert_to(&foot).expect("conversion succeeds");
-        assert_eq!(length_in_foot.unsafe_value().to_f64(), 2.0 / 0.3048);
+        assert_eq!(length_in_foot.unsafe_value(), 2.0 / 0.3048);
 
         let length_converted_back_to_meter = length_in_foot
             .convert_to(&meter)
             .expect("conversion succeeds");
         assert_relative_eq!(
-            length_converted_back_to_meter.unsafe_value().to_f64(),
+            length_converted_back_to_meter.unsafe_value(),
             2.0,
             epsilon = 1e-6
         );
@@ -476,31 +473,27 @@ mod tests {
         let length = Quantity::new_f64(2.5, meter.clone());
         {
             let length_in_centimeter = length.convert_to(&centimeter).expect("conversion succeeds");
-            assert_relative_eq!(
-                length_in_centimeter.unsafe_value().to_f64(),
-                250.0,
-                epsilon = 1e-6
-            );
+            assert_relative_eq!(length_in_centimeter.unsafe_value(), 250.0, epsilon = 1e-6);
 
             let length_converted_back_to_meter = length_in_centimeter
                 .convert_to(&meter)
                 .expect("conversion succeeds");
             assert_relative_eq!(
-                length_converted_back_to_meter.unsafe_value().to_f64(),
+                length_converted_back_to_meter.unsafe_value(),
                 2.5,
                 epsilon = 1e-6
             );
         }
         {
             let volume = length
-                .power(Quantity::from_scalar(3.0))
+                .power(Quantity::from_scalar(3.0.into()))
                 .expect("exponent is scalar");
 
             let volume_in_centimeter3 = volume
                 .convert_to(&centimeter.powi(3))
                 .expect("conversion succeeds");
             assert_relative_eq!(
-                volume_in_centimeter3.unsafe_value().to_f64(),
+                volume_in_centimeter3.unsafe_value(),
                 15_625_000.0,
                 epsilon = 1e-6
             );

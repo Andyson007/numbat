@@ -3,6 +3,7 @@ use compact_str::CompactString;
 use super::macros::*;
 use super::Args;
 use super::Result;
+use crate::number::Number;
 use crate::quantity::Quantity;
 use crate::typed_ast::DType;
 use crate::value::Value;
@@ -90,11 +91,11 @@ pub fn _get_chemical_element_data_raw(mut args: Args) -> Result<Value> {
             vec![
                 Value::String(element.symbol().into()),
                 Value::String(element.name().into()),
-                Value::Quantity(Quantity::from_scalar(element.atomic_number() as f64)),
+                Value::Quantity(Quantity::from_scalar(element.atomic_number().into())),
                 Value::Quantity(Quantity::from_scalar(
                     element
                         .group()
-                        .map_or(f64::NAN, |g| g.group_number() as f64),
+                        .map_or(Number::NAN, |g| g.group_number().into()),
                 )),
                 Value::String(
                     element
@@ -102,42 +103,42 @@ pub fn _get_chemical_element_data_raw(mut args: Args) -> Result<Value> {
                         .map(|g| g.group_name().unwrap_or("unknown").into())
                         .unwrap_or("unknown".into()),
                 ),
-                Value::Quantity(Quantity::from_scalar(element.period() as f64)),
+                Value::Quantity(Quantity::from_scalar(element.period().into())),
                 Value::Quantity(Quantity::from_scalar(
                     element
                         .melting_point()
-                        .map(|Kelvin(k)| k)
-                        .unwrap_or(f64::NAN),
+                        .map(|Kelvin(k)| k.into())
+                        .unwrap_or(Number::NAN),
                 )),
                 Value::Quantity(Quantity::from_scalar(
                     element
                         .boiling_point()
-                        .map(|Kelvin(k)| k)
-                        .unwrap_or(f64::NAN),
+                        .map(|Kelvin(k)| k.into())
+                        .unwrap_or(Number::NAN),
                 )),
                 Value::Quantity(Quantity::from_scalar(
                     element
                         .density()
-                        .map(|GramPerCubicCentimeter(d)| d)
-                        .unwrap_or(f64::NAN),
+                        .map(|GramPerCubicCentimeter(d)| d.into())
+                        .unwrap_or(Number::NAN),
                 )),
                 Value::Quantity(Quantity::from_scalar(
                     element
                         .electron_affinity()
-                        .map(|Electronvolt(e)| e)
-                        .unwrap_or(f64::NAN),
+                        .map(|Electronvolt(e)| e.into())
+                        .unwrap_or(Number::NAN),
                 )),
                 Value::Quantity(Quantity::from_scalar(
                     element
                         .ionization_energy()
-                        .map(|Electronvolt(e)| e)
-                        .unwrap_or(f64::NAN),
+                        .map(|Electronvolt(e)| e.into())
+                        .unwrap_or(Number::NAN),
                 )),
                 Value::Quantity(Quantity::from_scalar(
                     element
                         .evaporation_heat()
-                        .map(|KiloJoulePerMole(e)| e)
-                        .unwrap_or(f64::NAN),
+                        .map(|KiloJoulePerMole(e)| e.into())
+                        .unwrap_or(Number::NAN),
                 )),
             ],
         ))

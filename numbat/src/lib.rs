@@ -19,7 +19,6 @@ mod interpreter;
 pub mod keywords;
 pub mod list;
 pub mod markup;
-mod math;
 pub mod module_importer;
 mod name_resolution;
 mod number;
