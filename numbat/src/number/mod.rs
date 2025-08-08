@@ -2,7 +2,7 @@ mod math;
 use std::fmt::Display;
 
 #[cfg(test)]
-use approx::{RelativeEq, AbsDiffEq};
+use approx::{AbsDiffEq, RelativeEq};
 use compact_str::{format_compact, CompactString, ToCompactString};
 use num_traits::{FromPrimitive, ToPrimitive, Zero};
 use pretty_dtoa::FmtFloatConfig;
@@ -32,7 +32,7 @@ impl Number {
     }
 
     pub fn is_infinite(&self) -> bool {
-        self.0.is_nan()
+        self.0.is_infinite()
     }
 
     pub fn is_negative(&self) -> bool {

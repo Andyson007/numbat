@@ -818,7 +818,7 @@ impl Vm {
 
                     if lhs.is_negative() {
                         return Err(Box::new(RuntimeError::FactorialOfNegativeNumber));
-                    } else if lhs.clone().fract().is_zero() {
+                    } else if !lhs.clone().fract().is_zero() {
                         return Err(Box::new(RuntimeError::FactorialOfNonInteger));
                     }
                     self.push_quantity(Quantity::from_scalar(lhs.clone().factorial(order)));
