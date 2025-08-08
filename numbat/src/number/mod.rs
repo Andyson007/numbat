@@ -5,7 +5,7 @@ use compact_str::{format_compact, CompactString, ToCompactString};
 use num_traits::{ToPrimitive, Zero};
 use pretty_dtoa::FmtFloatConfig;
 
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)] // TODO: we probably want to remove 'Copy' once we move to a more sophisticated numerical type
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 #[cfg(feature = "plotting")]
 #[derive(serde::Serialize)]
 pub struct Number(f64);
@@ -51,19 +51,19 @@ impl Number {
         self.0.fract().is_zero()
     }
 
-    fn is_integer(self) -> bool {
+    fn is_integer(&self) -> bool {
         self.0.trunc() == self.0
     }
 
     /// Pretty prints with default options
-    pub fn pretty_print(self) -> CompactString {
+    pub fn pretty_print(&self) -> CompactString {
         self.pretty_print_with_options(None)
     }
 
     /// Pretty prints with the given options if options is not None.
     /// If options is None, default options will be used.
     /// If options is not None, float-based format handling is used and integer-based format handling is skipped.
-    pub fn pretty_print_with_options(self, options: Option<FmtFloatConfig>) -> CompactString {
+    pub fn pretty_print_with_options(&self, options: Option<FmtFloatConfig>) -> CompactString {
         let number = self.0;
 
         // 64-bit floats can accurately represent integers up to 2^52 [1],

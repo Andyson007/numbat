@@ -64,12 +64,12 @@ impl Quantity {
 
     pub fn to_base_unit_representation(&self) -> Quantity {
         let (unit, factor) = self.unit.to_base_unit_representation();
-        Quantity::new(self.value * factor, unit)
+        Quantity::new(self.value.clone() * factor, unit)
     }
 
     pub fn convert_to(&self, target_unit: &Unit) -> Result<Quantity> {
         if &self.unit == target_unit || self.unsafe_value().is_zero() {
-            Ok(Quantity::new(self.value, target_unit.clone()))
+            Ok(Quantity::new(self.value.clone(), target_unit.clone()))
         } else {
             // Remove common unit factors to reduce unnecessary conversion procedures
             // For example: when converting from km/hour to mile/hour, there is no need
@@ -120,7 +120,7 @@ impl Quantity {
 
             if own_base_unit_representation == target_base_unit_representation {
                 Ok(Quantity::new(
-                    *quantity_base_unit_representation.unsafe_value() / factor,
+                    quantity_base_unit_representation.unsafe_value().clone() / factor,
                     target_unit.clone(),
                 ))
             } else {
@@ -220,7 +220,7 @@ impl Quantity {
 
         simplified_unit.canonicalize();
 
-        Quantity::new(self.value * factor, simplified_unit)
+        Quantity::new(self.value.clone() * factor, simplified_unit)
     }
 
     pub fn as_scalar(&self) -> Result<Number> {
@@ -257,7 +257,7 @@ impl Quantity {
 
 impl From<&Number> for Quantity {
     fn from(n: &Number) -> Self {
-        Quantity::from_scalar(*n)
+        Quantity::from_scalar(n.clone())
     }
 }
 
@@ -271,7 +271,7 @@ impl std::ops::Add for &Quantity {
             Ok(self.clone())
         } else {
             Ok(Quantity::new(
-                self.value + rhs.convert_to(&self.unit)?.value,
+                self.value.clone() + rhs.convert_to(&self.unit)?.value,
                 self.unit.clone(),
             ))
         }
@@ -288,7 +288,7 @@ impl std::ops::Sub for &Quantity {
             Ok(self.clone())
         } else {
             Ok(Quantity::new(
-                self.value - rhs.convert_to(&self.unit)?.value,
+                self.value.clone() - rhs.convert_to(&self.unit)?.value,
                 self.unit.clone(),
             ))
         }

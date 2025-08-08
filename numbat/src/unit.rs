@@ -66,7 +66,7 @@ impl UnitIdentifier {
                 Number::from_f64(1.0),
             ),
             UnitKind::Derived(factor, defining_unit) => {
-                BaseUnitAndFactor(defining_unit.clone(), *factor)
+                BaseUnitAndFactor(defining_unit.clone(), factor.clone())
             }
         }
     }
@@ -98,7 +98,7 @@ impl UnitIdentifier {
                     )
                     .product();
 
-                BaseUnitAndFactor(base_unit, *factor * defining_unit_factor)
+                BaseUnitAndFactor(base_unit, factor.clone() * defining_unit_factor)
             }
         }
     }

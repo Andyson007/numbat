@@ -310,12 +310,12 @@ impl TypeChecker {
                 self.add_dtype_constraint(&polymorphic_zero_type).ok();
                 typed_ast::Expression::Scalar(
                     *span,
-                    *n,
+                    n.clone(),
                     TypeScheme::concrete(polymorphic_zero_type),
                 )
             }
             ast::Expression::Scalar(span, n) => {
-                typed_ast::Expression::Scalar(*span, *n, TypeScheme::concrete(Type::scalar()))
+                typed_ast::Expression::Scalar(*span, n.clone(), TypeScheme::concrete(Type::scalar()))
             }
             ast::Expression::Identifier(span, name) => {
                 let type_scheme = self.identifier_type(*span, name)?.clone();

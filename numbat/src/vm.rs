@@ -217,7 +217,7 @@ pub enum Constant {
 impl Constant {
     fn to_value(&self) -> Value {
         match self {
-            Constant::Scalar(n) => Value::Quantity(Quantity::from_scalar(*n)),
+            Constant::Scalar(n) => Value::Quantity(Quantity::from_scalar(n.clone())),
             Constant::Unit(u) => Value::Quantity(Quantity::from_unit(u.clone())),
             Constant::Boolean(b) => Value::Boolean(*b),
             Constant::String(s) => Value::String(s.clone()),
@@ -637,7 +637,7 @@ impl Vm {
                     let prefix_idx = self.read_u16();
                     let prefix = self.prefixes[prefix_idx as usize];
                     self.push_quantity(Quantity::new(
-                        *quantity.unsafe_value(),
+                        quantity.unsafe_value().clone(),
                         quantity.unit().clone().with_prefix(prefix),
                     ));
                 }
@@ -660,7 +660,7 @@ impl Vm {
                     self.constants[constant_idx as usize] = Constant::Unit(Unit::new_derived(
                         unit_name.clone(),
                         metadata.canonical_name.clone(),
-                        *conversion_value.unsafe_value(),
+                        conversion_value.unsafe_value().clone(),
                         defining_unit.clone(),
                     ));
                 }
@@ -705,17 +705,15 @@ impl Vm {
 
                     // for time, the base unit is in seconds
                     let base = rhs.to_base_unit_representation();
-                    let seconds_f64 = base.unsafe_value();
+                    let seconds = base.unsafe_value();
 
-                    let seconds_i64 = seconds_f64
-                        .to_i64()
-                        .ok_or(RuntimeError::DurationOutOfRange)?;
+                    let seconds_i64 = seconds.to_i64().ok_or(RuntimeError::DurationOutOfRange)?;
 
                     let span = jiff::Span::new()
                         .try_seconds(seconds_i64)
                         .map_err(|_| RuntimeError::DurationOutOfRange)?
                         .nanoseconds(
-                            (seconds_f64.fract() * 1_000_000_000.into())
+                            (seconds.clone().fract() * 1_000_000_000.into())
                                 .round()
                                 .to_i64()
                                 .unwrap(),
@@ -820,10 +818,10 @@ impl Vm {
 
                     if lhs.is_negative() {
                         return Err(Box::new(RuntimeError::FactorialOfNegativeNumber));
-                    } else if lhs.fract().is_zero() {
+                    } else if lhs.clone().fract().is_zero() {
                         return Err(Box::new(RuntimeError::FactorialOfNonInteger));
                     }
-                    self.push_quantity(Quantity::from_scalar(lhs.factorial(order)));
+                    self.push_quantity(Quantity::from_scalar(lhs.clone().factorial(order)));
                 }
                 Op::JumpIfFalse => {
                     let offset = self.read_u16() as usize;

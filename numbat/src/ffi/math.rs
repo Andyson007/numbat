@@ -14,7 +14,7 @@ pub fn mod_(mut args: Args) -> Result<Value> {
     let binding = y.convert_to(x.unit()).unwrap();
     let y_value = binding.unsafe_value();
 
-    return_quantity!(x_value.rem_euclid(y_value), x.unit().clone())
+    return_quantity!(x_value.clone().rem_euclid(y_value), x.unit().clone())
 }
 
 // A simple math function with signature 'Fn[(Scalar) -> Scalar]'
@@ -29,7 +29,7 @@ macro_rules! simple_scalar_math_function {
 
 pub fn abs(mut args: Args) -> Result<Value> {
     let arg = quantity_arg!(args);
-    return_quantity!(arg.unsafe_value().abs(), arg.unit().clone())
+    return_quantity!(arg.unsafe_value().clone().abs(), arg.unit().clone())
 }
 
 simple_scalar_math_function!(round, round);
@@ -53,7 +53,7 @@ pub fn atan2(mut args: Args) -> Result<Value> {
     let binding = x.convert_to(y.unit()).unwrap();
     let x_value = binding.unsafe_value();
 
-    return_scalar!(y_value.atan2(&x_value))
+    return_scalar!(y_value.clone().atan2(&x_value))
 }
 
 simple_scalar_math_function!(sinh, sinh);
