@@ -539,7 +539,7 @@ impl ReplaceSpans for StringPart<'_> {
 impl ReplaceSpans for Expression<'_> {
     fn replace_spans(&self) -> Self {
         match self {
-            Expression::Scalar(_, name) => Expression::Scalar(Span::dummy(), *name),
+            Expression::Scalar(_, name) => Expression::Scalar(Span::dummy(), name.clone()),
             Expression::Identifier(_, name) => Expression::Identifier(Span::dummy(), name),
             Expression::UnitIdentifier(_, prefix, name, full_name) => {
                 Expression::UnitIdentifier(Span::dummy(), *prefix, name.clone(), full_name.clone())

@@ -1,6 +1,8 @@
 mod math;
 use std::fmt::Display;
 
+#[cfg(test)]
+use approx::{RelativeEq, AbsDiffEq};
 use compact_str::{format_compact, CompactString, ToCompactString};
 use num_traits::{FromPrimitive, ToPrimitive, Zero};
 use pretty_dtoa::FmtFloatConfig;
@@ -23,6 +25,10 @@ impl Number {
 
     pub fn is_nan(&self) -> bool {
         self.0.is_nan()
+    }
+
+    pub fn is_exact_integer(&self, value: i32) -> bool {
+        self.0 == Into::<f64>::into(value)
     }
 
     pub fn is_infinite(&self) -> bool {
@@ -243,6 +249,34 @@ impl TryInto<Rational> for &Number {
     }
 }
 
+#[cfg(test)]
+impl AbsDiffEq for Number {
+    type Epsilon = <f64 as AbsDiffEq>::Epsilon;
+
+    fn default_epsilon() -> Self::Epsilon {
+        f64::default_epsilon()
+    }
+
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        self.0.abs_diff_eq(&other.0, epsilon)
+    }
+}
+
+#[cfg(test)]
+impl RelativeEq for Number {
+    fn default_max_relative() -> Self::Epsilon {
+        f64::default_max_relative()
+    }
+
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_relative: Self::Epsilon,
+    ) -> bool {
+        self.0.relative_eq(&other.0, epsilon, max_relative)
+    }
+}
 
 #[test]
 fn test_pretty_print() {

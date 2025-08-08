@@ -1092,8 +1092,8 @@ impl Vm {
 #[test]
 fn vm_basic() {
     let mut vm = Vm::new();
-    vm.add_constant(Constant::Scalar(42.0));
-    vm.add_constant(Constant::Scalar(1.0));
+    vm.add_constant(Constant::Scalar(42.into()));
+    vm.add_constant(Constant::Scalar(1.into()));
 
     vm.add_op1(Op::LoadConstant, 0);
     vm.add_op1(Op::LoadConstant, 1);
@@ -1107,6 +1107,6 @@ fn vm_basic() {
 
     assert_eq!(
         vm.run(&mut ctx).unwrap(),
-        InterpreterResult::Value(Value::Quantity(Quantity::from_scalar(42.0 + 1.0)))
+        InterpreterResult::Value(Value::Quantity(Quantity::from_scalar((42 + 1).into())))
     );
 }

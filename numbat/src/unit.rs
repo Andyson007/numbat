@@ -662,7 +662,7 @@ mod tests {
         let hour = Unit::hour();
         let (base_unit_representation, conversion_factor) = hour.to_base_unit_representation();
         assert_eq!(base_unit_representation, Unit::second());
-        assert_relative_eq!(conversion_factor.to_f64(), 3600.0, epsilon = 1e-6);
+        assert_relative_eq!(conversion_factor.to_f64().unwrap(), 3600.0, epsilon = 1e-6);
     }
 
     #[test]
@@ -670,7 +670,7 @@ mod tests {
         let percent = Unit::percent();
         let (base_unit_representation, conversion_factor) = percent.to_base_unit_representation();
         assert_eq!(base_unit_representation, Unit::scalar());
-        assert_eq!(conversion_factor.to_f64(), 0.01);
+        assert_eq!(conversion_factor.to_f64().unwrap(), 0.01);
     }
 
     #[test]
@@ -680,7 +680,7 @@ mod tests {
             mile_per_hour.to_base_unit_representation();
         assert_eq!(base_unit_representation, Unit::meter() / Unit::second());
         assert_relative_eq!(
-            conversion_factor.to_f64(),
+            conversion_factor.to_f64().unwrap(),
             1609.344 / 3600.0,
             epsilon = 1e-6
         );

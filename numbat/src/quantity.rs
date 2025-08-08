@@ -419,7 +419,7 @@ mod tests {
         let meter = Unit::meter();
         let second = Unit::second();
 
-        let length = Quantity::new_f64(2.0, meter.clone());
+        let length = Quantity::new(2.into(), meter.clone());
 
         assert!(length.convert_to(&meter).is_ok());
 
@@ -439,17 +439,17 @@ mod tests {
             meter.clone(),
         );
 
-        let length = Quantity::new_f64(2.0, meter.clone());
+        let length = Quantity::new(2.into(), meter.clone());
 
         let length_in_foot = length.convert_to(&foot).expect("conversion succeeds");
-        assert_eq!(length_in_foot.unsafe_value(), 2.0 / 0.3048);
+        assert_eq!(length_in_foot.unsafe_value(), &(2.0 / 0.3048).into());
 
         let length_converted_back_to_meter = length_in_foot
             .convert_to(&meter)
             .expect("conversion succeeds");
         assert_relative_eq!(
             length_converted_back_to_meter.unsafe_value(),
-            2.0,
+            &2.into(),
             epsilon = 1e-6
         );
     }
@@ -463,17 +463,21 @@ mod tests {
         let meter = Unit::meter();
         let centimeter = Unit::meter().with_prefix(Prefix::centi());
 
-        let length = Quantity::new_f64(2.5, meter.clone());
+        let length = Quantity::new(2.5.into(), meter.clone());
         {
             let length_in_centimeter = length.convert_to(&centimeter).expect("conversion succeeds");
-            assert_relative_eq!(length_in_centimeter.unsafe_value(), 250.0, epsilon = 1e-6);
+            assert_relative_eq!(
+                length_in_centimeter.unsafe_value(),
+                &250.into(),
+                epsilon = 1e-6
+            );
 
             let length_converted_back_to_meter = length_in_centimeter
                 .convert_to(&meter)
                 .expect("conversion succeeds");
             assert_relative_eq!(
                 length_converted_back_to_meter.unsafe_value(),
-                2.5,
+                &2.5.into(),
                 epsilon = 1e-6
             );
         }
@@ -487,7 +491,7 @@ mod tests {
                 .expect("conversion succeeds");
             assert_relative_eq!(
                 volume_in_centimeter3.unsafe_value(),
-                15_625_000.0,
+                &15_625_000.into(),
                 epsilon = 1e-6
             );
         }
@@ -496,113 +500,122 @@ mod tests {
     #[test]
     fn abs() {
         assert_eq!(
-            Quantity::new_f64(0.0, Unit::scalar()).abs(),
-            Quantity::new_f64(0.0, Unit::scalar())
+            Quantity::new(0.into(), Unit::scalar()).abs(),
+            Quantity::new(0.into(), Unit::scalar())
         );
 
         assert_eq!(
-            Quantity::new_f64(1.0, Unit::scalar()).abs(),
-            Quantity::new_f64(1.0, Unit::scalar())
+            Quantity::new(1.into(), Unit::scalar()).abs(),
+            Quantity::new(1.into(), Unit::scalar())
         );
 
         assert_eq!(
-            Quantity::new_f64(-1.0, Unit::scalar()).abs(),
-            Quantity::new_f64(1.0, Unit::scalar())
+            Quantity::new((-1).into(), Unit::scalar()).abs(),
+            Quantity::new(1.into(), Unit::scalar())
         );
     }
 
     #[test]
     fn full_simplify_basic() {
-        let q = Quantity::new_f64(2.0, Unit::meter() / Unit::second());
+        let q = Quantity::new(2.into(), Unit::meter() / Unit::second());
         assert_eq!(q.full_simplify(), q);
     }
 
     #[test]
     fn full_simplify_convertible_to_scalar() {
         {
-            let q = Quantity::new_f64(2.0, Unit::meter() / Unit::millimeter());
-            assert_eq!(q.full_simplify(), Quantity::from_scalar(2000.0));
+            let q = Quantity::new(2.into(), Unit::meter() / Unit::millimeter());
+            assert_eq!(q.full_simplify(), Quantity::from_scalar(2000.into()));
         }
         {
-            let q = Quantity::new_f64(2.0, Unit::kilometer() / Unit::millimeter());
-            assert_eq!(q.full_simplify(), Quantity::from_scalar(2000000.0));
+            let q = Quantity::new(2.into(), Unit::kilometer() / Unit::millimeter());
+            assert_eq!(q.full_simplify(), Quantity::from_scalar(2000000.into()));
         }
         {
-            let q = Quantity::new_f64(2.0, Unit::meter() / Unit::centimeter() * Unit::second());
+            let q = Quantity::new(
+                2.into(),
+                Unit::meter() / Unit::centimeter() * Unit::second(),
+            );
             assert_eq!(
                 q.full_simplify(),
-                Quantity::new_f64(2.0 * 100.0, Unit::second())
+                Quantity::new((2 * 100).into(), Unit::second())
             );
         }
         {
-            let q = Quantity::new_f64(1.0, Unit::kph() / (Unit::kilometer() / Unit::hour()));
-            assert_eq!(q.full_simplify(), Quantity::from_scalar(1.0));
+            let q = Quantity::new(1.into(), Unit::kph() / (Unit::kilometer() / Unit::hour()));
+            assert_eq!(q.full_simplify(), Quantity::from_scalar(1.into()));
         }
     }
 
     #[test]
     fn full_simplify_unit_rearrangements() {
         {
-            let q = Quantity::new_f64(2.0, Unit::meter() * Unit::second() * Unit::meter());
-            let expected = Quantity::new_f64(2.0, Unit::meter().powi(2) * Unit::second());
+            let q = Quantity::new(2.into(), Unit::meter() * Unit::second() * Unit::meter());
+            let expected = Quantity::new(2.into(), Unit::meter().powi(2) * Unit::second());
             assert_eq!(q.full_simplify(), expected);
         }
         {
-            let q = Quantity::new_f64(2.0, Unit::kilometer() / Unit::millimeter());
-            assert_eq!(q.full_simplify(), Quantity::from_scalar(2000000.0));
+            let q = Quantity::new(2.into(), Unit::kilometer() / Unit::millimeter());
+            assert_eq!(q.full_simplify(), Quantity::from_scalar(2000000.into()));
         }
         {
-            let q = Quantity::new_f64(1.0, Unit::meter() * Unit::gram() / Unit::centimeter());
-            assert_eq!(q.full_simplify(), Quantity::new_f64(100.0, Unit::gram()));
+            let q = Quantity::new(1.into(), Unit::meter() * Unit::gram() / Unit::centimeter());
+            assert_eq!(q.full_simplify(), Quantity::new(100.into(), Unit::gram()));
         }
     }
 
     #[test]
     fn full_simplify_scalarlike_units() {
         {
-            let q = Quantity::new_f64(3.0, Unit::percent() * Unit::kilogram());
-            assert_eq!(q.full_simplify(), Quantity::new_f64(0.03, Unit::kilogram()));
+            let q = Quantity::new(3.into(), Unit::percent() * Unit::kilogram());
+            assert_eq!(
+                q.full_simplify(),
+                Quantity::new(0.03.into(), Unit::kilogram())
+            );
         }
     }
 
     #[test]
     fn full_simplify_complex() {
         {
-            let q = Quantity::new_f64(5.0, Unit::second() * Unit::millimeter() / Unit::meter());
-            let expected = Quantity::new_f64(0.005, Unit::second());
+            let q = Quantity::new(
+                5.into(),
+                Unit::second() * Unit::millimeter() / Unit::meter(),
+            );
+            let expected = Quantity::new(0.005.into(), Unit::second());
             assert_eq!(q.full_simplify(), expected);
         }
         {
-            let q = Quantity::new_f64(
-                5.0,
+            let q = Quantity::new(
+                5.into(),
                 Unit::bit().with_prefix(Prefix::mega()) / Unit::second() * Unit::hour(),
             );
-            let expected = Quantity::new_f64(18000.0, Unit::bit().with_prefix(Prefix::mega()));
+            let expected = Quantity::new(18000.into(), Unit::bit().with_prefix(Prefix::mega()));
             assert_eq!(q.full_simplify(), expected);
         }
         {
-            let q = Quantity::new_f64(5.0, Unit::centimeter() * Unit::meter());
-            let expected = Quantity::new_f64(500.0, Unit::centimeter().powi(2));
+            let q = Quantity::new(5.into(), Unit::centimeter() * Unit::meter());
+            let expected = Quantity::new(500.into(), Unit::centimeter().powi(2));
             assert_eq!(q.full_simplify(), expected);
         }
         {
-            let q = Quantity::new_f64(5.0, Unit::meter() * Unit::centimeter());
-            let expected = Quantity::new_f64(500.0, Unit::centimeter().powi(2));
+            let q = Quantity::new(5.into(), Unit::meter() * Unit::centimeter());
+            let expected = Quantity::new(500.into(), Unit::centimeter().powi(2));
             assert_eq!(q.full_simplify(), expected);
         }
         {
-            let q = Quantity::new_f64(1.0, Unit::hertz() / Unit::second());
-            let expected = Quantity::new_f64(1.0, Unit::second().powi(-2));
+            let q = Quantity::new(1.into(), Unit::hertz() / Unit::second());
+            let expected = Quantity::new(1.into(), Unit::second().powi(-2));
             assert_eq!(q.full_simplify(), expected);
         }
         {
-            let q = Quantity::new_f64(1.0, Unit::gallon() / Unit::inch());
-            let expected = Quantity::new_f64(231.0, Unit::inch().powi(2));
+            let q = Quantity::new(1.into(), Unit::gallon() / Unit::inch());
+            let expected = Quantity::new(231.into(), Unit::inch().powi(2));
             assert_eq!(q.full_simplify(), expected);
         }
         {
-            let q = Quantity::new_f64(1.0, Unit::gallon() / Unit::inch().powi(2));
-            let expected = Quantity::new_f64(231.0, Unit::inch());
+            let q = Quantity::new(1.into(), Unit::gallon() / Unit::inch().powi(2));
+            let expected = Quantity::new(231.into(), Unit::inch());
             assert_eq!(q.full_simplify(), expected);
         }
     }
@@ -616,28 +629,28 @@ mod tests {
         // (representing a multiplication sign) and a unit symbol; e.g., 2.21 kg,
         // 7.3×10² m², 22 K.
         assert_eq!(
-            Quantity::new_f64(2.21, Unit::kilogram()).to_string(),
+            Quantity::new(2.21.into(), Unit::kilogram()).to_string(),
             "2.21 kg"
         );
-        assert_eq!(Quantity::new_f64(22.0, Unit::kelvin()).to_string(), "22 K");
+        assert_eq!(Quantity::new(22.into(), Unit::kelvin()).to_string(), "22 K");
 
         // Exceptions are the symbols for plane angular degrees, minutes, and
         // seconds (°, ′, and ″), which are placed immediately after the
         // number with no intervening space.
-        assert_eq!(Quantity::new_f64(90.0, Unit::degree()).to_string(), "90°");
+        assert_eq!(Quantity::new(90.into(), Unit::degree()).to_string(), "90°");
 
         // A prefix is part of the unit, and its symbol is prepended to the
         // unit symbol without a separator (e.g., k in km, M in MPa, G in GHz).
         // Compound prefixes are not allowed.
         assert_eq!(
-            Quantity::new_f64(1.0, Unit::hertz().with_prefix(Prefix::giga())).to_string(),
+            Quantity::new(1.into(), Unit::hertz().with_prefix(Prefix::giga())).to_string(),
             "1 GHz"
         );
 
         // Symbols for derived units formed by multiplication are joined with a
         // centre dot (·) or a non-breaking space; e.g., N·m or N m.
         assert_eq!(
-            Quantity::new_f64(1.0, Unit::newton() * Unit::meter()).to_string(),
+            Quantity::new(1.into(), Unit::newton() * Unit::meter()).to_string(),
             "1 N·m"
         );
 
@@ -647,12 +660,12 @@ mod tests {
         // be used; e.g., kg/(m·s²) and kg·m^(−1)·s^(−2) are acceptable, but
         // kg/m/s² is ambiguous and unacceptable.
         assert_eq!(
-            Quantity::new_f64(1.0, Unit::meter() / Unit::meter()).to_string(),
+            Quantity::new(1.into(), Unit::meter() / Unit::meter()).to_string(),
             "1 m/m"
         );
         assert_eq!(
-            Quantity::new_f64(
-                1.0,
+            Quantity::new(
+                1.into(),
                 Unit::kilogram() / (Unit::meter() * Unit::second().powi(2))
             )
             .to_string(),
