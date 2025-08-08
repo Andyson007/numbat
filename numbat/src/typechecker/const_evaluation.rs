@@ -1,13 +1,9 @@
 use crate::arithmetic::{Exponent, Rational};
 use crate::{ast, typed_ast};
 
-use num_traits::{CheckedAdd, CheckedDiv, CheckedMul, CheckedSub, FromPrimitive, Zero};
+use num_traits::{CheckedAdd, CheckedDiv, CheckedMul, CheckedSub, Zero};
 
 use super::{error::Result, TypeCheckError};
-
-fn to_rational_exponent(exponent_f64: f64) -> Option<Exponent> {
-    Rational::from_f64(exponent_f64)
-}
 
 /// Evaluates a limited set of expressions *at compile time*. This is needed to
 /// support type checking of expressions like `(2 * meter)^(2*3 - 4)` where we
@@ -15,8 +11,9 @@ fn to_rational_exponent(exponent_f64: f64) -> Option<Exponent> {
 pub fn evaluate_const_expr(expr: &typed_ast::Expression) -> Result<Exponent> {
     let name = match expr {
         typed_ast::Expression::Scalar(span, n, _type) => {
-            return Ok(to_rational_exponent(n.to_f64().unwrap())
-                .ok_or(TypeCheckError::NonRationalExponent(*span))?)
+            return Ok(n
+                .try_into()
+                .map_err(|_| TypeCheckError::NonRationalExponent(*span))?)
         }
         typed_ast::Expression::UnaryOperator(_, ast::UnaryOperator::Negate, ref expr, _) => {
             return Ok(-evaluate_const_expr(expr)?)

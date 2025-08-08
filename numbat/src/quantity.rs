@@ -1,4 +1,4 @@
-use crate::arithmetic::{Exponent, Power, Rational};
+use crate::arithmetic::{Exponent, Power};
 use crate::number::Number;
 use crate::pretty_print::PrettyPrint;
 use crate::unit::{is_multiple_of, Unit, UnitFactor};
@@ -6,7 +6,7 @@ use crate::unit::{is_multiple_of, Unit, UnitFactor};
 use compact_str::{format_compact, CompactString, ToCompactString};
 use itertools::Itertools;
 use num_rational::Ratio;
-use num_traits::{FromPrimitive, Zero};
+use num_traits::Zero;
 use pretty_dtoa::FmtFloatConfig;
 use thiserror::Error;
 
@@ -235,14 +235,7 @@ impl Quantity {
         let exponent_as_scalar = exp.as_scalar()?;
         Ok(Quantity::new(
             self.value.pow(&exponent_as_scalar),
-            self.unit.power(
-                Rational::from_f64(
-                    exponent_as_scalar
-                        .to_f64()
-                        .ok_or(QuantityError::NonRationalExponent)?,
-                )
-                .ok_or(QuantityError::NonRationalExponent)?,
-            ),
+            self.unit.power(exponent_as_scalar.try_into()?),
         ))
     }
 

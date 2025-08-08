@@ -2,8 +2,10 @@ mod math;
 use std::fmt::Display;
 
 use compact_str::{format_compact, CompactString, ToCompactString};
-use num_traits::{ToPrimitive, Zero};
+use num_traits::{FromPrimitive, ToPrimitive, Zero};
 use pretty_dtoa::FmtFloatConfig;
+
+use crate::{arithmetic::Rational, quantity::QuantityError};
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 #[cfg(feature = "plotting")]
@@ -13,8 +15,11 @@ pub struct Number(f64);
 impl Eq for Number {}
 
 impl Number {
+    pub const ZERO: Number = Number(0.0);
     pub const ONE: Number = Number(1.0);
     pub const NAN: Number = Number(f64::NAN);
+    pub const INFINITY: Number = Number(f64::INFINITY);
+    pub const NEG_INFINITY: Number = Number(f64::NEG_INFINITY);
 
     pub fn is_nan(&self) -> bool {
         self.0.is_nan()
@@ -221,6 +226,23 @@ number_impl_from_primitive!(f64);
 
 number_impl_from_primitive!(usize);
 number_impl_from_primitive!(isize);
+
+impl TryInto<Rational> for Number {
+    type Error = QuantityError;
+
+    fn try_into(self) -> Result<Rational, Self::Error> {
+        Rational::from_f64(self.0).ok_or(QuantityError::NonRationalExponent)
+    }
+}
+
+impl TryInto<Rational> for &Number {
+    type Error = QuantityError;
+
+    fn try_into(self) -> Result<Rational, Self::Error> {
+        Rational::from_f64(self.0).ok_or(QuantityError::NonRationalExponent)
+    }
+}
+
 
 #[test]
 fn test_pretty_print() {
